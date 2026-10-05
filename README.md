@@ -121,6 +121,19 @@ cd backend
 .\venv\Scripts\python.exe run_tests.py tests/test_asset_bundle.py
 ```
 
+## 版本管理
+
+仓库已初始化（Git 2.55，主分支 `master`，提交身份沿用全局配置）。首提交基线见 git log：
+
+```
+5289164 chore: 剔除首提交中误入的表格抓取 dump
+3b86d67 chore: 初始化仓库并收口 TASK-017 交付发布与边缘协同
+```
+
+纳入版本库的只有**产品代码 + 文档 + 工程约定**（`.ai/`、`docs/`、`frontend/` 源码、`backend/` 应用代码与迁移、`sheets` 之外的模板）。以下一律不入库：依赖与构建产物（`node_modules/`、`.next*/`）、密钥（`.env`、`*.key`、`*.pem`，`backend/.env.example` 为白名单占位文件）、数据库与本地存储（`*.db`、`backend/data/`）、日志与一次性排查脚本、`sheets/`（表格抓取 dump）。
+
+> 注意：`backend/.env` 里的 `DASHSCOPE_API_KEY` 仍未填，知识库语义检索当前走本地哈希向量兜底，填了才升级为 text-embedding-v3 真实语义向量（维度一致无需重建索引）。
+
 `reset_test_db.py` 走的是**迁移链**（`alembic upgrade head`），不是 `create_all`：
 这样测试库与任何新环境冷启动的路径完全一致，每次回归顺带验证迁移链可用。
 它还会跑一遍 `bootstrap.init_all`（补角色/权限/账号/ontology）并给受限角色
