@@ -1,0 +1,33 @@
+数据库: postgresql+psycopg://postgres:postgres123@127.0.0.1:5432/furui_aios_test
+目标: 25 个脚本
+==============================================================
+[ 1/25] OK   test_admin_keys.py                   PASS   9 / FAIL 0 / SKIP 0
+[ 2/25] OK   test_api_mainline.py                 PASS  30 / FAIL 0 / SKIP 0
+[ 3/25] FAIL test_asset_bundle.py                 PASS  34 / FAIL 1 / SKIP 0
+       └ FAIL  seed 首次创建 2 Bundle
+[ 4/25] OK   test_auth_rbac.py                    PASS  32 / FAIL 0 / SKIP 0
+[ 5/25] OK   test_coordinator.py                  PASS  29 / FAIL 0 / SKIP 0
+[ 6/25] OK   test_dashboard.py                    PASS  24 / FAIL 0 / SKIP 0
+[ 7/25] OK   test_data_assets.py                  PASS  23 / FAIL 0 / SKIP 0
+[ 8/25] OK   test_eval_contract.py                PASS  36 / FAIL 0 / SKIP 0
+[ 9/25] OK   test_failure_path.py                 PASS  11 / FAIL 0 / SKIP 0
+[10/25] OK   test_intelligence_endpoints.py       PASS  16 / FAIL 0 / SKIP 0
+[11/25] OK   test_knowledge.py                    PASS  31 / FAIL 0 / SKIP 0
+[12/25] OK   test_logic_graph.py                  PASS  19 / FAIL 0 / SKIP 0
+[13/25] OK   test_mainline.py                     PASS  39 / FAIL 0 / SKIP 0
+[14/25] OK   test_nuclear_scenario.py             PASS  23 / FAIL 0 / SKIP 0
+[15/25] OK   test_object_actions.py               PASS  31 / FAIL 0 / SKIP 0
+[16/25] OK   test_ontology_persistence.py         PASS  31 / FAIL 0 / SKIP 0
+[17/25] OK   test_ontology_revisions.py           PASS  31 / FAIL 0 / SKIP 0
+[18/25] OK   test_orchestrator_sse.py             PASS  11 / FAIL 0 / SKIP 0
+[19/25] OK   test_outbox_projector.py             PASS  21 / FAIL 0 / SKIP 0
+[20/25] OK   test_pages.py                        PASS  17 / FAIL 0 / SKIP 0
+[21/25] OK   test_receipts.py                     PASS  31 / FAIL 0 / SKIP 0
+[22/25] OK   test_release_delivery.py             PASS  37 / FAIL 0 / SKIP 0
+[23/25] OK   test_rls_isolation.py                PASS  13 / FAIL 0 / SKIP 0
+[24/25] OK   test_secret_ref.py                   PASS  29 / FAIL 0 / SKIP 0
+[25/25] OK   test_task_state_machine.py           PASS  51 / FAIL 0 / SKIP 0
+==============================================================
+汇总  PASS 659 / FAIL 1 / SKIP 0
+文件  未通过: test_asset_bundle.py
+exit=1

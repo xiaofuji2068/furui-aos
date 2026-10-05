@@ -1,0 +1,9 @@
+﻿python.exe : INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+所在位置 行:1 字符: 547
++ ... TEXITCODE"; & $py -m alembic current *> tools_patch\alembic_current.t ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO  [alembic....PostgresqlImpl.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+b7c8d9e0f1a2 (head)

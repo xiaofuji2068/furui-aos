@@ -1,0 +1,60 @@
+# Furui AI OS — 私有化交付编排（TASK-017 / 70-02）
+# 使用：docker compose up -d --build（部署机需 Docker + Compose v2）
+# 本机（无 Docker）仅供结构校验：backend/tools/validate_deploy.py
+#
+# 拓扑：frontend(3000) ──BACKEND_URL──▶ backend(8000) ──DATABASE_URL──▶ postgres(5432)
+# 信任边界见 docs/DEPLOYMENT.md：仅 frontend 对外，backend/postgres 内网。
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: furui
+      POSTGRES_PASSWORD: ${PG_PASSWORD:?请注入 PG_PASSWORD}
+      POSTGRES_DB: furui_aios
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U furui -d furui_aios"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    # 数据库零暴露：不映射宿主端口（如需本机调试可放开，生产禁用）
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://furui:${PG_PASSWORD:?}@postgres:5432/furui_aios
+      ACTIVE_LLM_PROVIDER: ${ACTIVE_LLM_PROVIDER:-}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      # 模型 Key 亦可经「模型管理」页写入 Keychain（secret_entries 表，TASK-013）
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/health',timeout=5)\""]
+      interval: 15s
+      timeout: 10s
+      retries: 6
+    restart: unless-stopped
+    # 迁移：部署窗口手动执行（docker compose run --rm backend alembic upgrade head），见 docs/UPGRADE.md
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      BACKEND_URL: http://backend:8000
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

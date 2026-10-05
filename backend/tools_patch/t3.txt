@@ -1,0 +1,51 @@
+﻿[startup] 未配置 DASHSCOPE_API_KEY，知识检索走本地哈希向量（离线兜底）；可在「模型管理」页配置，或写入 backend/.env 后重启生效
+  PASS  admin 用户存在
+  PASS  agent 存在
+
+=== 1. EvalContract 默认基线（seed 生效） ===
+  PASS  seed 含 accuracy@agent
+  PASS  seed 含 fairness@approval
+  PASS  seed 含 latency@toolcall
+  PASS  accuracy 阈值 0.9 / gte / enabled
+  PASS  admin 登录成功
+
+=== 2. GET /api/admin/eval-contracts 一览 ===
+  PASS  GET 200
+  PASS  列表 ≥ 3 条基线
+  PASS  每条含 metric/operator/threshold/enabled
+
+=== 3. POST 幂等 upsert：新增 + 停用生效 ===
+  PASS  POST 新建 200
+  PASS  新合同含 id/name/threshold
+  PASS  POST 同 name 更新 200
+  PASS  更新生效：threshold=0.97
+  PASS  停用生效：enabled=False
+  PASS  未重复插入（仍 1 条）
+  PASS  非法 metric 400
+
+=== 4. 审批决策写 lineage（reject 路径） ===
+  PASS  生成了 Level3 审批单
+  PASS  reject 成功
+  PASS  reject 写 decision_lineage
+  PASS  lineage.decision=reject
+  PASS  lineage 含 input_hash
+  PASS  lineage 含决策人
+  PASS  lineage 含决策时间
+  PASS  input_hash 可复算一致
+
+=== 5. 审批决策写 lineage（approve 路径 + 输出哈希） ===
+  PASS  生成了第二个审批单
+  PASS  approve 成功
+  PASS  lineage.decision=approve
+  PASS  lineage 含 output_hash（执行结果指纹）
+  PASS  lineage 含 receipt_id（凭证关联）
+  PASS  lineage 含 input_hash
+  PASS  lineage.input_hash 可复算一致
+  PASS  GET /api/approvals/{id} 200
+  PASS  详情含 decision_lineage
+  PASS  详情 lineage.decision=approve
+
+=== 6. 清理测试数据 ===
+  PASS  测试合同已清理
+
+=== 结果：PASS 36 / FAIL 0 ===

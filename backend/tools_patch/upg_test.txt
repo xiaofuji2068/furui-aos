@@ -1,0 +1,9 @@
+﻿python.exe : INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+所在位置 行:1 字符: 453
++ ... aios_test'; & $py -m alembic upgrade head *> tools_patch\upg_test.txt ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO  [alembic....PostgresqlImpl.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade a2b3c4d5e6f8 -> b7c8d9e0f1a2, ontology 唯一约束补复合租户键（TASK-015 回归暴露）

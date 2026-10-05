@@ -1,0 +1,48 @@
+﻿[startup] 未配置 DASHSCOPE_API_KEY，知识检索走本地哈希向量（离线兜底）；可在「模型管理」页配置，或写入 backend/.env 后重启生效
+=== 未登录访问被拒 ===
+  PASS  GET 无 token 401
+  PASS  POST 无 token 401
+
+=== sales 登录（无 knowledge:manage） ===
+  PASS  sales 登录成功
+  PASS  sales GET revisions 200（datasource:view 可读）
+  PASS  sales POST revisions 403（knowledge:manage 缺失）
+
+=== admin 登录（有 knowledge:manage） ===
+  PASS  admin 登录成功
+  baseline 版本数：1 (['r1'])
+  PASS  baseline 含 r1
+
+=== POST /api/ontology/revisions 递增三次 ===
+  PASS  POST 第 1 次 200
+  PASS  POST 第 1 次 含 version 字段
+  PASS  POST 第 1 次 含 commit_ts 字段
+  PASS  POST 第 1 次 version 形如 rN
+  PASS  POST 第 2 次 200
+  PASS  POST 第 2 次 含 version 字段
+  PASS  POST 第 2 次 含 commit_ts 字段
+  PASS  POST 第 2 次 version 形如 rN
+  PASS  POST 第 3 次 200
+  PASS  POST 第 3 次 含 version 字段
+  PASS  POST 第 3 次 含 commit_ts 字段
+  PASS  POST 第 3 次 version 形如 rN
+  PASS  三次版本号唯一
+  PASS  三次版本号递增
+  PASS  三次版本号均不在 baseline
+  PASS  DB 总版本数 = baseline + 3
+  PASS  AuditLog 增量 = 3（0 -> 3）
+
+=== POST 空 note 自动用 manual bump by <user> 兜底 ===
+  PASS  POST 空 note 200
+  PASS  空 note 时回退为 manual bump by ...
+
+=== GET /api/ontology/revisions 按 commit_ts 倒序 ===
+  PASS  GET 200
+  PASS  返回是列表
+  PASS  列表至少含 baseline + 4 条
+  PASS  按 commit_ts 倒序
+  PASS  每条含 version + note + commit_ts
+
+（已清理本次测试产生的 revision / audit 行）
+
+=== 结果：PASS 31 / FAIL 0 ===

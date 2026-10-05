@@ -1,0 +1,20 @@
+
+CREATE TABLE data_datasets (
+	id INTEGER NOT NULL, 
+	company_id INTEGER NOT NULL, 
+	source_id VARCHAR(64) NOT NULL, 
+	name VARCHAR(120) NOT NULL, 
+	kind VARCHAR(20) NOT NULL, 
+	entity VARCHAR(120) NOT NULL, 
+	row_count INTEGER NOT NULL, 
+	version VARCHAR(32) NOT NULL, 
+	schema_json TEXT NOT NULL, 
+	lineage_json TEXT NOT NULL, 
+	health_status VARCHAR(16) NOT NULL, 
+	last_sync_at DATETIME, 
+	status VARCHAR(16) NOT NULL, 
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at DATETIME NOT NULL, 
+	PRIMARY KEY (id)
+)
+

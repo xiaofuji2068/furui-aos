@@ -1,0 +1,4 @@
+INIT_ALL OK
+BUNDLES: 2
+- nuclear-inspection-bundle 核电巡检总览 v1.0 status=published
+- sales-command-bundle 销售经营看板 v1.0 status=published

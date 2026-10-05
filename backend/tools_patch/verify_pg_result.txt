@@ -1,0 +1,10 @@
+===== health [200] =====
+{"code":0,"message":"ok","data":{"status":"ok","checks":[{"name":"数据库","status":"ok","detail":"SQLite 连接正常"},{"name":"对话模型","status":"warning","detail":"deepseek-chat（deepseek） · 配置就绪，尚未发起真实调用"},{"name":"语义检索","status":"warning","detail":"未配置 DashScope Key（本地哈希向量兜底）"},{"name":"系统","status":"ok","det
+===== login [200] =====
+{"code":0,"message":"ok","data":{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTAzNjgwMDcsImV4cCI6MTc5MDQxM
+===== /api/pages/widget-types [200] =====
+{"code":0,"message":"ok","data":{"items":[{"type":"stat_cards","label":"统计卡片","desc":"企业总览 KPI（/api/overview）","default_params":{}},{"type":"object_list","label":"对象列表","desc":"本体图实体列表（对象中心数据）","default_params":{"type":"All"}},{"type":"data_assets","label":"数据资产","desc":"数据资产表格（/api/data-assets）","default_params":{}},{"type":"tasks","label":"最近任务","desc":"任务列表（/api/tasks）","default_params":{"limit":8}},{"type":"text_note","label":"文本说明","desc":"静态说明文字","default_params":{"content":"在这里输入说明文字"}}]}}
+===== /api/pages [200] =====
+{"code":0,"message":"ok","data":{"items":[{"id":1,"code":"nuclear-overview","title":"核电巡检总览","description":"示例低代码页：监测站/巡检任务/数据资产一屏概览（TASK-015 seed，可编辑）","status":"published","version":"1.0","widget_count":5,"updated_at":"2026-09-25T20:26:47.360545"}]}}
+===== /api/logic/graphs [200] =====
+{"code":0,"message":"ok","data":{"items":[{"id":1,"code":"sales-drop","name":"销售下降归因链路","version":"1.0","description":"ERP → CRM → 知识 → 归因 → 报告 → 审批动作（销售主链路）","status":"active","node_count":6,"updated_at":"2026-09-25T20:26:47.403377"},{"id":2,"code":"inspection-anomaly","name":"核电巡检异常归因链路","version":"1.0","description":"监测站 → 指标 → 知识 → 归因 → 报告 → 工单审批（核电主链路）","status":"active","node_count":6,"updated_at":"2026-09-25T20:26:47.407457"}]}}

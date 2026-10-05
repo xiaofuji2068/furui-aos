@@ -1,0 +1,292 @@
+﻿python.exe : Traceback (most recent call last):
+所在位置 行:1 字符: 270
++ ... aios_test'; & $py tests\test_eval_contract.py *> 'C:\Users\mymatebook ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\engine\b
+ase.py", line 2118, in _exec_insertmany_context
+    dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~^
+        cursor,
+        ^^^^^^^
+    ...<2 lines>...
+        context,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\engine\d
+efault.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\psycopg\cursor.py",
+ line 117, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UniqueViolation: 重复键违反唯一约束"uq_onto_obj"
+DETAIL:  键值"(type, object_id)=(Customer, CUS-001)" 已经存在
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\tests\test_eval_contract.py", line 213, in
+ <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\tests\test_eval_contract.py", line 57, in 
+main
+    with TestClient(app) as c:
+         ~~~~~~~~~~^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\testclien
+t.py", line 743, in __enter__
+    portal.call(self.wait_startup)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\anyio\from_thread.p
+y", line 338, in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mymatebook\.workbuddy\binaries\python\versions\3.13.12\Lib\concurrent\futures\_base.py", line 460, in 
+result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mymatebook\.workbuddy\binaries\python\versions\3.13.12\Lib\concurrent\futures\_base.py", line 402, in 
+__get_result
+    raise self._exception
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\anyio\from_thread.p
+y", line 263, in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\testclien
+t.py", line 778, in wait_startup
+    await receive()
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\testclien
+t.py", line 769, in receive
+    self.task.result()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mymatebook\.workbuddy\binaries\python\versions\3.13.12\Lib\concurrent\futures\_base.py", line 453, in 
+result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mymatebook\.workbuddy\binaries\python\versions\3.13.12\Lib\concurrent\futures\_base.py", line 402, in 
+__get_result
+    raise self._exception
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\anyio\from_thread.p
+y", line 263, in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\testclien
+t.py", line 759, in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\fastapi\application
+s.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\applicati
+ons.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\middlewar
+e\errors.py", line 152, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\middlewar
+e\cors.py", line 77, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\middlewar
+e\base.py", line 101, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\middlewar
+e\exceptions.py", line 48, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\routing.p
+y", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\routing.p
+y", line 724, in app
+    await self.lifespan(scope, receive, send)
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\starlette\routing.p
+y", line 693, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+               ~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mymatebook\.workbuddy\binaries\python\versions\3.13.12\Lib\contextlib.py", line 214, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\fastapi\routing.py"
+, line 133, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mymatebook\.workbuddy\binaries\python\versions\3.13.12\Lib\contextlib.py", line 214, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\app\main.py", line 27, in lifespan
+    init_all()
+    ~~~~~~~~^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\app\bootstrap.py", line 773, in init_all
+    seed_ontology(db, company_id=_fc.id if _fc else 1)  # 本体归属当前企业（Phase 1 P0）
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\app\ontology\__init__.py", line 538, in se
+ed_ontology
+    _upsert_db_link(db, link, company_id=company_id)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\app\ontology\__init__.py", line 401, in _u
+psert_db_link
+    db.flush()  # autoflush=False：先落 pending 再查，保证同事务内幂等（PG 唯一键）
+    ~~~~~~~~^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\orm\sess
+ion.py", line 4352, in flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\orm\sess
+ion.py", line 4487, in _flush
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\util\lan
+ghelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\orm\sess
+ion.py", line 4448, in _flush
+    flush_context.execute()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\orm\unit
+ofwork.py", line 466, in execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\orm\unit
+ofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_mapper_hierarchy(self.mapper, False, False),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\orm\pers
+istence.py", line 93, in save_obj
+    _emit_insert_statements(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\orm\pers
+istence.py", line 1143, in _emit_insert_statements
+    result = connection.execute(
+        statement, multiparams, execution_options=execution_options
+    )
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\engine\b
+ase.py", line 1418, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\sql\elem
+ents.py", line 515, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\engine\b
+ase.py", line 1640, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\engine\b
+ase.py", line 1844, in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\engine\b
+ase.py", line 2126, in _exec_insertmany_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e,
+        ^^
+    ...<4 lines>...
+        is_sub_exec=True,
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\engine\b
+ase.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\engine\b
+ase.py", line 2118, in _exec_insertmany_context
+    dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~^
+        cursor,
+        ^^^^^^^
+    ...<2 lines>...
+        context,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\sqlalchemy\engine\d
+efault.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mymatebook\WorkBuddy\2026-08-31-13-04-07\furui-aios\backend\venv\Lib\site-packages\psycopg\cursor.py",
+ line 117, in execute
+    raise ex.with_traceback(None)
+sqlalchemy.exc.IntegrityError: (psycopg.errors.UniqueViolation) 重复键违反唯一约束"uq_onto_obj"
+DETAIL:  键值"(type, object_id)=(Customer, CUS-001)" 已经存在
+[SQL: INSERT INTO ontology_objects (company_id, type, object_id, properties, created_at) SELECT p0::INTEGER, p1::VARCHA
+R, p2::VARCHAR, p3::VARCHAR, p4::TIMESTAMP WITHOUT TIME ZONE FROM (VALUES (%(company_id__0)s::INTEGER, %(type__0)s::VAR
+CHAR, %(object_id_ ... 6789 characters truncated ... 3, p4, sen_counter) ORDER BY sen_counter RETURNING ontology_object
+s.id, ontology_objects.id AS id__1]
+[parameters: {'object_id__0': 'CUS-001', 'company_id__0': 3, 'type__0': 'Customer', 'created_at__0': datetime.datetime(
+2026, 9, 25, 21, 8, 59, 573603), 'properties__0': '{"id": "CUS-001", "name": "恒力重工", "industry": "装备制造", "region": "华东"
+, "tier": "A"}', 'object_id__1': 'CUS-002', 'company_id__1': 3, 'type__1': 'Customer', 'created_at__1': datetime.dateti
+me(2026, 9, 25, 21, 8, 59, 573610), 'properties__1': '{"id": "CUS-002", "name": "中广核工程", "industry": "核电", "region": "华
+南", "tier": "A"}', 'object_id__2': 'CUS-003', 'company_id__2': 3, 'type__2': 'Customer', 'created_at__2': datetime.date
+time(2026, 9, 25, 21, 8, 59, 573614), 'properties__2': '{"id": "CUS-003", "name": "浙能集团", "industry": "能源", "region": "
+华东", "tier": "A"}', 'object_id__3': 'ORD-2026-0817', 'company_id__3': 3, 'type__3': 'Order', 'created_at__3': datetime.
+datetime(2026, 9, 25, 21, 8, 59, 573616), 'properties__3': '{"id": "ORD-2026-0817", "customer_id": "CUS-001", "sku": "S
+KU-A12", "qty": 1, "amount": 480000, "region": "华东", "status": "已下推"}', 'object_id__4': 'ORD-2026-0818', 'company_id__4
+': 3, 'type__4': 'Order', 'created_at__4': datetime.datetime(2026, 9, 25, 21, 8, 59, 573618), 'properties__4': '{"id": 
+"ORD-2026-0818", "customer_id": "CUS-002", "sku": "SKU-B07", "qty": 2, "amount": 520000, "region": "华南", "status": "待发货
+"}', 'object_id__5': 'ORD-2026-0819', 'company_id__5': 3, 'type__5': 'Order', 'created_at__5': datetime.datetime(2026, 
+9, 25, 21, 8, 59, 573620), 'properties__5': '{"id": "ORD-2026-0819", "customer_id": "CUS-001", "sku": "SKU-A12", "qty":
+ 1, "amount": 480000, "region": "华东", "status": "已下推"}', 'object_id__6': 'ORD-2026-0820', 'company_id__6': 3, 'type__6'
+: 'Order', 'created_at__6': datetime.datetime(2026, 9, 25, 21, 8, 59, 573623), 'properties__6': '{"id": "ORD-2026-0820"
+, "customer_id": "CUS-003", "sku": "SKU-C33", "qty": 5, "amount": 430000, "region": "华东", "status": "已完成"}', 'object_id
+__7': 'ORD-2026-0821', 'company_id__7': 3, 'type__7': 'Order', 'created_at__7': datetime.datetime(2026, 9, 25, 21, 8, 5
+9, 573625), 'properties__7': '{"id": "ORD-2026-0821", "customer_id": "CUS-002", "sku": "SKU-A12", "qty": 1, "amount": 4
+80000, "region": "华南", "status": "已完成"}', 'object_id__8': 'DEV-SKU-A12', 'company_id__8': 3, 'type__8': 'Device', 'crea
+ted_at__8': datetime.datetime(2026, 9, 25, 21, 8, 59, 573627), 'properties__8': '{"id": "DEV-SKU-A12", "name": "辐射监测站·现
+场在线", "linked_sku": "SKU-A12", "status": "online", "site": "华东核电厂区"}', 'object_id__9': 'DEV-SKU-B07', 'company_id__9': 
+3, 'type__9': 'Device', 'created_at__9': datetime.datetime(2026, 9, 25, 21, 8, 59, 573629), 'properties__9': '{"id": "D
+EV-SKU-B07", "name": "核岛巡检无人机", "linked_sku": "SKU-B07", "status": "online", "site": "华南核电基地"}' ... 110 parameters trun
+cated ... 'object_id__32': 'MET-001', 'company_id__32': 3, 'type__32': 'MetricRecord', 'created_at__32': datetime.datet
+ime(2026, 9, 25, 21, 8, 59, 573671), 'properties__32': '{"id": "MET-001", "station_code": "MS-01", "metric": "radiation
+", "value": 26.8, "unit": "uSv/h", "threshold": 20.0, "status": "alarm", "month": "2026-08"}', 'object_id__33': 'MET-00
+2', 'company_id__33': 3, 'type__33': 'MetricRecord', 'created_at__33': datetime.datetime(2026, 9, 25, 21, 8, 59, 573672
+), 'properties__33': '{"id": "MET-002", "station_code": "MS-02", "metric": "temperature", "value": 92.4, "unit": "℃", "
+threshold": 85.0, "status": "alarm", "month": "2026-08"}', 'object_id__34': 'MET-003', 'company_id__34': 3, 'type__34':
+ 'MetricRecord', 'created_at__34': datetime.datetime(2026, 9, 25, 21, 8, 59, 573673), 'properties__34': '{"id": "MET-00
+3", "station_code": "MS-03", "metric": "radiation", "value": 8.6, "unit": "uSv/h", "threshold": 20.0, "status": "normal
+", "month": "2026-08"}', 'object_id__35': 'MET-004', 'company_id__35': 3, 'type__35': 'MetricRecord', 'created_at__35':
+ datetime.datetime(2026, 9, 25, 21, 8, 59, 573674), 'properties__35': '{"id": "MET-004", "station_code": "MS-04", "metr
+ic": "vibration", "value": 7.2, "unit": "mm/s", "threshold": 6.0, "status": "alarm", "month": "2026-08"}', 'object_id__
+36': 'MET-005', 'company_id__36': 3, 'type__36': 'MetricRecord', 'created_at__36': datetime.datetime(2026, 9, 25, 21, 8
+, 59, 573676), 'properties__36': '{"id": "MET-005", "station_code": "MS-05", "metric": "radiation", "value": 6.3, "unit
+": "uSv/h", "threshold": 20.0, "status": "normal", "month": "2026-08"}', 'object_id__37': 'INSP-001', 'company_id__37':
+ 3, 'type__37': 'InspectionRecord', 'created_at__37': datetime.datetime(2026, 9, 25, 21, 8, 59, 573677), 'properties__3
+7': '{"id": "INSP-001", "station_code": "MS-01", "inspect_date": "2026-08-15", "note": "辐射剂量率 26.8uSv/h 超限，已派员复测"}', 'o
+bject_id__38': 'INSP-002', 'company_id__38': 3, 'type__38': 'InspectionRecord', 'created_at__38': datetime.datetime(202
+6, 9, 25, 21, 8, 59, 573678), 'properties__38': '{"id": "INSP-002", "station_code": "MS-02", "inspect_date": "2026-08-1
+5", "note": "主冷却泵温度 92.4℃ 超限，检查冷却回路"}', 'object_id__39': 'INSP-003', 'company_id__39': 3, 'type__39': 'InspectionRecord
+', 'created_at__39': datetime.datetime(2026, 9, 25, 21, 8, 59, 573679), 'properties__39': '{"id": "INSP-003", "station_
+code": "MS-04", "inspect_date": "2026-08-15", "note": "空压机振动 7.2mm/s 超限，计划停机检修"}', 'object_id__40': 'INSP-004', 'compan
+y_id__40': 3, 'type__40': 'InspectionRecord', 'created_at__40': datetime.datetime(2026, 9, 25, 21, 8, 59, 573681), 'pro
+perties__40': '{"id": "INSP-004", "station_code": "MS-03", "inspect_date": "2026-08-16", "note": "蒸汽发生器监测正常，无异常"}', 'ob
+ject_id__41': 'INSP-005', 'company_id__41': 3, 'type__41': 'InspectionRecord', 'created_at__41': datetime.datetime(2026
+, 9, 25, 21, 8, 59, 573682), 'properties__41': '{"id": "INSP-005", "station_code": "MS-05", "inspect_date": "2026-08-16
+", "note": "稳压器监测正常，无异常"}'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)

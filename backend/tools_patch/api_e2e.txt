@@ -1,0 +1,9 @@
+LOGIN 200 token=True
+BUNDLES 200 count=2
+  - nuclear-inspection-bundle 核电巡检总览 v1.0 published installed=False nav=核电巡检总览
+  - sales-command-bundle 销售经营看板 v1.0 published installed=False nav=销售经营看板
+INSTALL 200 code=nuclear-inspection-bundle created=True pages=1 graphs=1
+INSTALLED-NAV 200 count=1
+  - ☢️ 核电巡检总览 href=/pages/nuclear-overview
+DERIVED-PAGE 200 code=nuclear-overview title=核电巡检总览 widgets=5
+INSTALLED 200 count=1

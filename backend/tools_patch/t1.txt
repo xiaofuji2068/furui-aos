@@ -1,0 +1,51 @@
+﻿[startup] 未配置 DASHSCOPE_API_KEY，知识检索走本地哈希向量（离线兜底）；可在「模型管理」页配置，或写入 backend/.env 后重启生效
+=== DB 持久化落库 ===
+  PASS  Order 落库 = 5
+  PASS  Product 落库 = 3
+  PASS  Device 落库 = 8（3 销售硬件 + 5 核电监测终端）
+  PASS  MonitoringStation 落库 = 5
+  PASS  Area 落库 = 3
+  PASS  MetricRecord 落库 = 5
+  PASS  InspectionRecord 落库 = 5
+  PASS  WorkOrder 种子 = 2
+  PASS  SchemaRevision 基线存在
+
+=== list_objects 走 DB 且类型正确 ===
+  PASS  list_objects 返回非空
+  PASS  返回的是 OntologyObject
+  PASS  Order 数量与 DB 一致 = 5
+  PASS  属性正确反序列化(amount 为数字)
+
+=== 幂等：重复 seed 行数不变 ===
+  PASS  seed 幂等(行数不变)
+
+=== search_objects 过滤生效 ===
+  PASS  能筛出大额订单
+
+=== Link 关系落库（步骤 1.1）===
+  PASS  Link 落库 = 32（销售 11 + 核电巡检 21）
+  PASS  WorkOrder→Device 关系存在
+  PASS  Order→Customer 关系存在
+  PASS  Ticket→WorkOrder 关系存在
+  PASS  Link seed 幂等(行数不变)
+  PASS  list_links 按类型过滤 = 2
+  PASS  list_links 按源过滤
+
+=== SchemaRevision 演进（步骤 1.2）===
+  PASS  bump 生成新版本号
+  PASS  版本号递增且唯一
+  PASS  新版本数 = 基线 + 2
+
+=== 写入型动作落库 ===
+  PASS  create_workorder 返回 id
+  PASS  新建工单已落库
+
+=== 重启不丢（重新开 session 仍可读到种子）===
+  PASS  重启后 Order 仍在 = 5
+
+=== 内存注册表仍可用（兜底路径）===
+  PASS  ONTO['types'] 含 10 类（含核电巡检 4 类）
+  PASS  ONTO['links'] 含 32 条
+  PASS  call_function 可用
+
+=== 结果：PASS 31 / FAIL 0 ===

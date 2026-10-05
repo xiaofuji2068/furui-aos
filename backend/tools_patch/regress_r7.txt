@@ -1,0 +1,143 @@
+﻿
+===== test_admin_keys.py =====
+PASS 9/9 admin_keys 断言
+还原 .env 与配置完成
+--- test_admin_keys.py: PASS (exit=0)
+
+===== test_api_mainline.py =====
+通过 30 项，失败 0 项
+========================================================
+--- test_api_mainline.py: PASS (exit=0)
+
+===== test_auth_rbac.py =====
+通过 32 项，失败 0 项
+========================================================
+--- test_auth_rbac.py: PASS (exit=0)
+
+===== test_coordinator.py =====
+
+=== 结果：PASS 29 / FAIL 0 ===
+--- test_coordinator.py: PASS (exit=0)
+
+===== test_dashboard.py =====
+通过 24 项，失败 0 项
+========================================================
+--- test_dashboard.py: PASS (exit=0)
+
+===== test_data_assets.py =====
+
+=== 结果：PASS 23 / FAIL 0 ===
+--- test_data_assets.py: PASS (exit=0)
+
+===== test_eval_contract.py =====
+
+=== 结果：PASS 36 / FAIL 0 ===
+--- test_eval_contract.py: PASS (exit=0)
+
+===== test_failure_path.py =====
+通过 11 项，失败 0 项
+========================================================
+--- test_failure_path.py: PASS (exit=0)
+
+===== test_intelligence_endpoints.py =====
+通过 16 项，失败 0 项
+========================================================
+--- test_intelligence_endpoints.py: PASS (exit=0)
+
+===== test_knowledge.py =====
+通过 31 项，失败 0 项
+========================================================
+--- test_knowledge.py: PASS (exit=0)
+
+===== test_logic_graph.py =====
+
+RESULT: PASS 19 / FAIL 0 / SKIP 0
+--- test_logic_graph.py: PASS (exit=0)
+
+===== test_mainline.py =====
+通过 39 项，失败 0 项
+========================================================
+--- test_mainline.py: PASS (exit=0)
+
+===== test_nuclear_scenario.py =====
+
+========== RESULT: 23 PASS / 0 FAIL ==========
+--- test_nuclear_scenario.py: PASS (exit=0)
+
+===== test_object_actions.py =====
+
+=== 结果：PASS 31 / FAIL 0 ===
+--- test_object_actions.py: PASS (exit=0)
+
+===== test_ontology_persistence.py =====
+
+=== 结果：PASS 31 / FAIL 0 ===
+--- test_ontology_persistence.py: PASS (exit=0)
+
+===== test_ontology_revisions.py =====
+
+=== 结果：PASS 31 / FAIL 0 ===
+--- test_ontology_revisions.py: PASS (exit=0)
+
+===== test_orchestrator_sse.py =====
+
+=== 结果：PASS 11 / FAIL 0 ===
+--- test_orchestrator_sse.py: PASS (exit=0)
+
+===== test_outbox_projector.py =====
+
+=== 结果：PASS 21 / FAIL 0 ===
+--- test_outbox_projector.py: PASS (exit=0)
+
+===== test_pages.py =====
+
+RESULT: PASS 17 / FAIL 0 / SKIP 0
+--- test_pages.py: PASS (exit=0)
+
+===== test_receipts.py =====
+
+=== 结果：PASS 31 / FAIL 0 ===
+--- test_receipts.py: PASS (exit=0)
+
+===== test_rls_isolation.py =====
+
+=== 结果：PASS 13 / FAIL 0 / SKIP 0 ===
+--- test_rls_isolation.py: PASS (exit=0)
+
+===== test_secret_ref.py =====
+
+RESULT: PASS 29 / FAIL 0 / SKIP 0
+--- test_secret_ref.py: PASS (exit=0)
+
+===== test_task_state_machine.py =====
+通过 51 项，失败 0 项
+========================================================
+--- test_task_state_machine.py: PASS (exit=0)
+
+
+========== 汇总 ==========
+PASS  test_admin_keys.py
+PASS  test_api_mainline.py
+PASS  test_auth_rbac.py
+PASS  test_coordinator.py
+PASS  test_dashboard.py
+PASS  test_data_assets.py
+PASS  test_eval_contract.py
+PASS  test_failure_path.py
+PASS  test_intelligence_endpoints.py
+PASS  test_knowledge.py
+PASS  test_logic_graph.py
+PASS  test_mainline.py
+PASS  test_nuclear_scenario.py
+PASS  test_object_actions.py
+PASS  test_ontology_persistence.py
+PASS  test_ontology_revisions.py
+PASS  test_orchestrator_sse.py
+PASS  test_outbox_projector.py
+PASS  test_pages.py
+PASS  test_receipts.py
+PASS  test_rls_isolation.py
+PASS  test_secret_ref.py
+PASS  test_task_state_machine.py
+
+TOTAL: PASS 23 / FAIL 0 / 23 files
