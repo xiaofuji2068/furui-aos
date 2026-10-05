@@ -50,6 +50,11 @@ Thumbs.db
 .vscode/
 .idea/
 
+# ---- 表格抓取原始 dump（sheets/cells-get-<id>-<range>.json，单文件 600KB+）----
+sheets/
+*.cells-get.json
+cells-get-*.json
+
 # ---- 一次性排查脚本（tools_patch / backend 根的调试残留）----
 dbg*.db
 dbg*.txt
