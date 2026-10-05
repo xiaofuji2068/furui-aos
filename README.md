@@ -134,6 +134,19 @@ cd backend
 
 > 注意：`backend/.env` 里的 `DASHSCOPE_API_KEY` 仍未填，知识库语义检索当前走本地哈希向量兜底，填了才升级为 text-embedding-v3 真实语义向量（维度一致无需重建索引）。
 
+## 成熟度地图
+
+系统当前到底到哪一步，看 **`docs/MATURITY-MATRIX.md`**（图谱 90-02「如何知道系统真的工作」）：
+9 分册 43 模块按行为级 **L0–L4** 逐条判级，附双库/迁移/接口/测试实测硬指标与下一步建议。
+
+地图可复跑刷新，不用手工重数：
+
+```powershell
+cd backend
+.\venv\Scripts\python.exe tools_patch\maturity_snapshot.py            # 人读摘要
+.\venv\Scripts\python.exe tools_patch\maturity_snapshot.py --json > ..\docs\maturity-snapshot.json   # 证据快照
+```
+
 `reset_test_db.py` 走的是**迁移链**（`alembic upgrade head`），不是 `create_all`：
 这样测试库与任何新环境冷启动的路径完全一致，每次回归顺带验证迁移链可用。
 它还会跑一遍 `bootstrap.init_all`（补角色/权限/账号/ontology）并给受限角色

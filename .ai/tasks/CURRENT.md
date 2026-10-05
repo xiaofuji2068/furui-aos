@@ -430,3 +430,50 @@ TASK-003（已 DONE）— Alembic 迁移链与双库（生产 furui_aios / 测�
 更新 CURRENT.md
 将本任务状态改为 DONE
 然后将下一任务（TASK-018，执行顺序第 8 位）写入 CURRENT.md
+
+---
+
+# 2026-10-05 TASK-018 成熟度矩阵与差异地图（图谱 90-02）完成
+
+> 图谱 90-02 原文「如何知道系统真的工作：成熟度矩阵、差异地图」——预期产物就是这张地图本身，
+> 不是再加一个接口。全部结论**实测取证**，不采信纸面评估。
+
+## Completed
+1. **`docs/MATURITY-MATRIX.md`（新建，主交付物）**：
+   - 定义**行为级 L0–L4 口径**（L3 达标＝闭环+测试锁定+双库对齐+前端可操作；L2 可用＝闭环+测试但缺生产化要素；L1 骨架＝只有模型或端点；L0 缺失）。旧清单 ✅/🟡/🔴 是主观涂色，同一模块不同人盘出不同结论，这次改成可验证标准。
+   - **9 分册 43 模块逐条判级**，每级要求「表 + 端点 + 测试」三重证据，证据栏只写实测到的（表名/端点/测试脚本），不写"应该有"。
+   - 含 9 分册热力图、**与 09-09 / 09-15 两版口径对照**、五轴硬指标、可观测六件套核对表、7 条已知债、`docs/DEPLOYMENT.md` 第 90 行现指向本文档。
+2. **`backend/tools_patch/maturity_snapshot.py`（新建，可复跑采集器）**：让这张地图**不是写完就过时的死文档**。
+   - 采：迁移链（**AST 解析** revision/down_revision，含链根唯一性校验）、双库 tip/表数/RLS 表数（`pg_class.relrowsecurity`+`relforcerowsecurity`）、API 端点与分组（遍历 FastAPI routes）、前端路由与源码文件数、`--json` 落 `docs/maturity-snapshot.json`。
+
+## 取证结果（2026-10-05 实测）
+- 迁移 **17 步**，从 DB tip `9d1f4c7b2e8a` 反推祖先链：单链、链根唯一 `78532a4f3d68`、**无分叉无孤立**。
+- 双库一致：prod / test 均 `tip=9d1f4c7b2e8a`、49 表、**40 表 RLS+FORCE**。
+- 接口面 **119 端点 / 28 组**；前端 **20 路由 / 85 ts 文件**，`tsc --noEmit` **0 错误**。
+- 测试面 **25 脚本 / 25 OK / PASS 660 / FAIL 0 / SKIP 0**（`run_tests.py` 全量）。
+- 代码规模：backend 13,158 行 / frontend 13,135 行。
+
+## 判定
+- **L3×11 / L2×17 / L1×6 / L0×5 / 范围外×4**；L3 率 ≈28%，L3+L2 ≈72%。
+- **差距不在功能覆盖，在生产化轴**：五轴里工程基础/测试锁定/接口覆盖/前端可操作都亮着，
+  **CI / Trace / Watchdog / 真实连接器全空**。这是当前阶段最真实的画像。
+- **旧地图最大失真点**：清单 09-09 之后再没更新，**9 项被标 🔴 的模块实际已被 TASK-012~017 落地**
+  （80-01/80-02、70-03、50-01/50-03、60-04、30-03、40-06、90-02）。
+- 两条**主动下调**（非粉饰）：10-01 从 🟡 降到 L1（Dataset 只有表无资产闭环）、40-03 只给 L1（有页定义无 Canvas），文中均标了理由。
+
+## Tests / 验证
+- 采集器连续跑通两轮（改 bug 前后）；修了两处自身缺陷：
+  ①`revision: str = 'x'` 在 AST 里是 `AnnAssign` 不是 `Assign`，原正则/原 AST 分支都漏判 → 两个分支都处理；
+  ②RLS 判据写错系统表（`pg_tables.force_rowsecurity` 不存在）→ 改 `pg_class.relrowsecurity`+`relforcerowsecurity`。
+- 文档数字自洽校验：9 分册小计合计＝43 ＝ 等级加总（11+17+6+5+4），发现并修掉两处漏数（70 分册 L2×3、80-03 属 L1）。
+
+## Risks / 待办
+- **真浏览器联调仍未做**（`/releases` `/edge-sites` 只验到 SSR 200 + 代理数据正确）。
+- **17 条迁移的 `downgrade` 零实测** —— 每条都写了 `down_revision`，但没有一条真跑过。
+- 已知债 7 条见文档 §5：真浏览器联调 / downgrade 零实测 / `test_outbox_projector` 口径曾变（本轮 21 PASS 为准）/ 签名为非对称占位 / 心跳无超时判离线 / `DASHSCOPE_API_KEY` 未填 / 无 CI。
+- 下一步 8 条（带验收标准）见文档 §6；已挑两条落成 BACKLOG 任务行：**TASK-018-1（接 CI，P1/READY）**、**TASK-018-2（Trace+Watchdog，P1/BLOCKED 待 018-1）**。
+
+# Completion
+完成以后：
+更新 CURRENT.md
+将下一任务写入 CURRENT.md（当前候选：TASK-018-1 接 CI）
