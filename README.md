@@ -123,12 +123,24 @@ cd backend
 
 ## 版本管理
 
-仓库已初始化（Git 2.55，主分支 `master`，提交身份沿用全局配置）。首提交基线见 git log：
+仓库已初始化（Git 2.55，主分支 `master`，提交身份沿用全局配置），并已推送远端：
 
 ```
+origin  git@github.com:xiaofuji2068/furui-aos.git   （SSH，默认分支 master）
+```
+
+> 注意仓库名是 **furui-aos**（不是项目目录名 furui-aios），以远端实际为准。
+
+首提交基线见 git log：
+
+```
+ce45561 docs: 补记 TASK-018 成熟度矩阵方法论与踩坑
+c22992b feat(TASK-018/90-02): 成熟度矩阵与差异地图落地 + 可复跑采集器
 5289164 chore: 剔除首提交中误入的表格抓取 dump
 3b86d67 chore: 初始化仓库并收口 TASK-017 交付发布与边缘协同
 ```
+
+日常推送：`git push origin master`。
 
 纳入版本库的只有**产品代码 + 文档 + 工程约定**（`.ai/`、`docs/`、`frontend/` 源码、`backend/` 应用代码与迁移、`sheets` 之外的模板）。以下一律不入库：依赖与构建产物（`node_modules/`、`.next*/`）、密钥（`.env`、`*.key`、`*.pem`，`backend/.env.example` 为白名单占位文件）、数据库与本地存储（`*.db`、`backend/data/`）、日志与一次性排查脚本、`sheets/`（表格抓取 dump）。
 
