@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
 from fastapi import APIRouter
@@ -17,6 +17,8 @@ from sqlalchemy import text
 
 from ..config import settings
 from ..db import IS_SQLITE, SessionLocal
+from ..models_release import EdgeSite
+from ..models_ai import ToolExecution
 
 
 router = APIRouter(tags=["健康检查"])
@@ -85,6 +87,67 @@ def _system_check() -> Dict[str, Any]:
     }
 
 
+def _edge_watchdog(threshold_seconds: int = 300) -> Dict[str, Any]:
+    """边缘站点看门狗（TASK-018-2 / 90-01 生产化轴）。
+
+    心跳超过 threshold_seconds 未续约的 online / syncing 站点判 offline。
+
+    注意：edge_sites 在 PG 上是 FORCE RLS；本接口用裸 SessionLocal（无租户上下文），
+    PG 查询会被 RLS 过滤为 0 行 → 优雅降级（flipped=0，不报错）。dev 默认 SQLite 无
+    RLS，看门狗真实生效。生产 PG 要真正跨租户扫描，需 BYPASSRLS 服务角色或按 company
+    逐租户 sweep，留作后续生产化任务。
+    """
+    try:
+        db = SessionLocal()
+        try:
+            cutoff = datetime.utcnow() - timedelta(seconds=threshold_seconds)
+            sites = db.query(EdgeSite).all()
+            counts: Dict[str, int] = {}
+            flipped = 0
+            for s in sites:
+                counts[s.status] = counts.get(s.status, 0) + 1
+                if s.status in ("online", "syncing") and (
+                    s.last_heartbeat_at is None or s.last_heartbeat_at < cutoff
+                ):
+                    s.status = "offline"
+                    flipped += 1
+            if flipped:
+                db.commit()
+            return {
+                "ok": True,
+                "threshold_seconds": threshold_seconds,
+                "counts": counts,
+                "stale_flipped_to_offline": flipped,
+            }
+        finally:
+            db.close()
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "detail": f"{e.__class__.__name__}: {e}"}
+
+
+def _error_rate_5m(window_seconds: int = 300) -> Dict[str, Any]:
+    """近 window_seconds 内工具调用错误率（failed / blocked 占比）。"""
+    try:
+        db = SessionLocal()
+        try:
+            cutoff = datetime.utcnow() - timedelta(seconds=window_seconds)
+            rows = db.query(ToolExecution).filter(ToolExecution.created_at >= cutoff).all()
+            total = len(rows)
+            errors = sum(1 for r in rows if r.status in ("failed", "blocked"))
+            rate = round(errors / total, 4) if total else 0.0
+            return {
+                "ok": True,
+                "window_seconds": window_seconds,
+                "total": total,
+                "errors": errors,
+                "rate": rate,
+            }
+        finally:
+            db.close()
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "detail": f"{e.__class__.__name__}: {e}"}
+
+
 @router.get("/health")
 def health() -> Dict[str, Any]:
     checks: List[Dict[str, Any]] = [
@@ -94,9 +157,13 @@ def health() -> Dict[str, Any]:
         _system_check(),
     ]
     failed = [c for c in checks if c["status"] == "error"]
+    edge = _edge_watchdog()
+    err = _error_rate_5m()
     return {
         "status": "ok" if not failed else "degraded",
         "checks": checks,
+        "edge": edge,
+        "error_rate_5m": err,
         "llm_enabled": settings.llm_enabled,
         "embedding_enabled": settings.embedding_enabled,
         "ts": datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M:%S"),

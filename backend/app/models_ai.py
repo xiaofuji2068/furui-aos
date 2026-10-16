@@ -26,6 +26,7 @@ from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, text,
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
+from .trace_ctx import get_trace_id
 
 
 def _utcnow() -> datetime:
@@ -600,6 +601,8 @@ class ToolExecution(Base):
     permission_check: Mapped[str] = mapped_column(String(20), default="pass")
     duration_ms: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, server_default=text("CURRENT_TIMESTAMP"))
+    # TASK-018-2：链路追踪 ID —— 一次请求 = 一条 trace，审计/工具执行同源
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
 
 # ==================== 审批域（TASK-021 ~ TASK-022） ====================
@@ -722,6 +725,8 @@ class AuditLog(Base):
     detail: Mapped[str] = mapped_column(Text, default="{}")
     result: Mapped[str] = mapped_column(String(20), default="success")    # success / denied / failed
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, server_default=text("CURRENT_TIMESTAMP"))
+    # TASK-018-2：链路追踪 ID
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
 
 # ==================== 销售跟进任务（主线案例落点） ====================
@@ -827,8 +832,14 @@ def write_audit(
     target: str = "",
     detail: Any = None,
     result: str = "success",
+    trace_id: str | None = None,
 ) -> AuditLog:
-    """统一写审计日志。任何关键动作都应调用它。"""
+    """统一写审计日志。任何关键动作都应调用它。
+
+    trace_id 默认从当前请求链路上下文（trace_ctx）取；显式传入时优先，
+    便于后台任务 / 跨服务调用主动携带链路 ID。
+    """
+    tid = trace_id if trace_id is not None else get_trace_id()
     log = AuditLog(
         company_id=company_id,
         actor_type=actor_type,
@@ -838,6 +849,7 @@ def write_audit(
         target=target,
         detail=_jd(detail if detail is not None else {}),
         result=result,
+        trace_id=tid,
     )
 
     db.add(log)

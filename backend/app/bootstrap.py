@@ -765,6 +765,9 @@ def init_all(force_erp: bool = False) -> None:
         ensure_column(db_m, "agents", "capabilities", "TEXT DEFAULT '[]'")
         # TASK-012 长程任务状态机：TaskBrief 列（agent_stages / task_reviews 由 create_all 自动建新表）
         ensure_column(db_m, "agent_tasks", "brief", "TEXT DEFAULT '{}'")
+        # TASK-018-2：链路追踪列（既有库 create_all 不会补，迁移负责新库，这里兜底已建表的老库）
+        ensure_column(db_m, "tool_executions", "trace_id", "VARCHAR(64)")
+        ensure_column(db_m, "audit_logs", "trace_id", "VARCHAR(64)")
     finally:
         db_m.close()
     init_erp_db(force=force_erp)               # 模拟 ERP/CRM

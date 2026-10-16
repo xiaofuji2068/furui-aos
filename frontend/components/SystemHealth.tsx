@@ -83,6 +83,47 @@ export default function SystemHealth() {
               );
             })}
           </div>
+
+          {/* TASK-018-2：Watchdog 看门狗指标（边缘站点 + 工具错误率） */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] px-3.5 py-3">
+              <div className="text-sm font-medium text-gray-100 flex items-center gap-2">
+                <span>🛰</span> 边缘站点看门狗
+              </div>
+              <div className="text-[11px] text-gray-400 mt-2 leading-relaxed">
+                {data.edge?.ok ? (
+                  <>
+                    在线 {data.edge.counts?.online || 0} · 离线 {data.edge.counts?.offline || 0} · 注册{" "}
+                    {data.edge.counts?.registered || 0} · 同步 {data.edge.counts?.syncing || 0}
+                    （超时阈值 {data.edge.threshold_seconds}s）
+                  </>
+                ) : (
+                  `看门狗暂不可用：${data.edge?.detail || "unknown"}`
+                )}
+              </div>
+              {data.edge?.stale_flipped_to_offline > 0 && (
+                <div className="text-[11px] text-amber-300 mt-1">
+                  ⚠ 本次扫描将 {data.edge.stale_flipped_to_offline} 个失联站点判为离线
+                </div>
+              )}
+            </div>
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] px-3.5 py-3">
+              <div className="text-sm font-medium text-gray-100 flex items-center gap-2">
+                <span>📉</span> 近 5 分钟工具错误率
+              </div>
+              <div className="text-[11px] text-gray-400 mt-2 leading-relaxed">
+                {data.error_rate_5m?.ok ? (
+                  <>
+                    调用 {data.error_rate_5m.total} 次 · 失败 {data.error_rate_5m.errors} 次 · 错误率{" "}
+                    {(data.error_rate_5m.rate * 100).toFixed(2)}%
+                  </>
+                ) : (
+                  `错误率统计暂不可用：${data.error_rate_5m?.detail || "unknown"}`
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="text-[11px] text-gray-500 mt-2">
             {failed > 0
               ? `⚠ ${failed} 项存在异常，请检查后端日志`

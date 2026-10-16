@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.api import router  # noqa: E402
 from app.bootstrap import init_all  # noqa: E402
 from app.config import settings  # noqa: E402
+from app.trace_ctx import TRACE_ID, new_trace_id  # noqa: E402
 
 
 @asynccontextmanager
@@ -36,6 +37,32 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title=settings.system_name, version=settings.version, lifespan=lifespan)
+
+
+# ---------------- 链路追踪（TASK-018-2） ----------------
+# 一次 HTTP 请求 = 一条 trace：入口生成 trace_id（或透传客户端 X-Trace-Id），
+# 存入 ContextVar，沿途审计 / 工具执行统一携带；响应头回写 X-Trace-Id 便于前端串联。
+
+@app.middleware("http")
+async def trace_middleware(request: Request, call_next):
+    trace_id = request.headers.get("x-trace-id") or new_trace_id()
+    token = TRACE_ID.set(trace_id)
+    request.state.trace_id = trace_id
+    response = await call_next(request)
+    response.headers["X-Trace-Id"] = trace_id
+    # 流式响应（SSE / chat-stream）的 body 在「响应发送阶段」才生成，其中可能触发
+    # 工具调用与审计（需读 trace_id）。因此流式响应不在此 reset —— 每个请求是独立的
+    # asyncio task，ContextVar 天然隔离，不会串到其它请求；task 结束即回收。
+    if getattr(response, "background", None) is not None or _is_streaming(response):
+        return response
+    TRACE_ID.reset(token)
+    return response
+
+
+def _is_streaming(response) -> bool:
+    from fastapi.responses import StreamingResponse
+
+    return isinstance(response, StreamingResponse)
 
 
 # ---------------- 统一 API 返回格式（TASK-001） ----------------

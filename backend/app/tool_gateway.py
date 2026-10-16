@@ -31,6 +31,7 @@ from .models_ai import (
     Notification, SalesTask, Tool, ToolExecution, write_audit,
 )
 from .rag import search as rag_search
+from .trace_ctx import get_trace_id
 
 
 @dataclass
@@ -642,7 +643,8 @@ def _approval_title(tool_name: str, params: Dict[str, Any]) -> str:
 
 
 def _log(db, ctx: ToolContext, tool: Tool, params, *, status, permission,
-         output=None, error="", ms: float) -> ToolExecution:
+         output=None, error="", ms: float, trace_id: str | None = None) -> ToolExecution:
+    tid = trace_id if trace_id is not None else get_trace_id()
     rec = ToolExecution(
         company_id=ctx.company_id,
         tool_id=tool.id,
@@ -654,6 +656,7 @@ def _log(db, ctx: ToolContext, tool: Tool, params, *, status, permission,
         output_data=json.dumps(output or {}, ensure_ascii=False)[:4000],
         status=status, error=error, permission_check=permission,
         duration_ms=int((time.time() - ms) * 1000),
+        trace_id=tid,
     )
     db.add(rec)
     db.flush()
