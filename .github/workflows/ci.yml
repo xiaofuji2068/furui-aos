@@ -1,0 +1,68 @@
+name: CI
+
+# 触发：推送到 master 自动跑（与 README「版本管理」一致）；也支持手动触发。
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # 隔离测试库 furui_aios_test 由 reset_test_db.py 自建（drop/create + alembic + init_all + furui_app 授权）。
+    # 该脚本把 PG 连接硬编码为 postgres:postgres123@127.0.0.1:5432，因此本服务必须用完全相同的账号密码。
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres123
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install backend deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Reset test DB (drop/create + alembic upgrade head + init_all + furui_app 授权)
+        run: |
+          cd backend
+          python tools_patch/reset_test_db.py
+
+      - name: Backend regression (25 脚本)
+        run: |
+          cd backend
+          python run_tests.py
+
+      - name: Frontend type check (tsc --noEmit)
+        run: |
+          cd frontend
+          npm ci
+          npx tsc --noEmit
