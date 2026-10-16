@@ -12,7 +12,7 @@ export default function Topbar() {
   const avatarChar = displayName.slice(0, 1);
 
   return (
-    <header className="h-14 px-6 flex items-center justify-between border-b border-white/5 bg-ink-900/60 backdrop-blur">
+    <header className="relative z-30 h-14 px-6 flex items-center justify-between border-b border-white/5 bg-ink-900/60 backdrop-blur">
       <div className="flex-1 max-w-[520px]">
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/5">
           <span className="text-gray-500">🔍</span>
