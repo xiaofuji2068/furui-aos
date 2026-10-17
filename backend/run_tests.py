@@ -104,12 +104,14 @@ def main():
         if n_fail or n_pass + n_fail == 0:
             broken.append(p.name)
             tail = (out.strip().splitlines() or ["<无输出>"])[-1]
-            for line in out.splitlines():
-                if re.search(r"FAIL|失败|Error|error", line):
-                    print(f"       └ {line.strip()[:78]}")
-                    break
-            else:
-                print(f"       └ 崩溃/无断言输出: {tail[:78]}")
+            # 把子进程尾部输出（含崩溃 traceback / 全部 FAIL 细节）一并吐出，
+            # 否则 CI 拿不到根因。
+            for line in out.strip().splitlines()[-40:]:
+                print(f"       | {line.strip()[:120]}")
+            if n_pass + n_fail == 0 and r.returncode != 0:
+                print(f"       └ 脚本崩溃 returncode={r.returncode}（见上方 traceback）")
+            elif n_pass + n_fail == 0:
+                print(f"       └ 无断言输出: {tail[:78]}")
 
     print("=" * 62)
     print(f"汇总  PASS {total_pass} / FAIL {total_fail} / SKIP {total_skip}")
