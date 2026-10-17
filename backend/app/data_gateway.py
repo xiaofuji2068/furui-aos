@@ -243,6 +243,7 @@ def _build_sample_data(conn: sqlite3.Connection) -> None:
     conn.executemany("INSERT INTO products VALUES (?,?,?,?,?,?)", products)
     conn.executemany("INSERT INTO sales_reps VALUES (?,?,?,?)", reps)
     conn.executemany("INSERT INTO orders VALUES (?,?,?,?,?,?,?,?,?,?)", orders)
+    conn.commit()
 
 
 
