@@ -10,6 +10,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # 失败时把后端回归的失败摘要发到公开 Issue，便于无 token 环境也能定位（匿名可读）。
+    permissions:
+      contents: read
+      issues: write
 
     # 隔离测试库 furui_aios_test 由 reset_test_db.py 自建（drop/create + alembic + init_all + furui_app 授权）。
     # 该脚本把 PG 连接硬编码为 postgres:postgres123@127.0.0.1:5432，因此本服务必须用完全相同的账号密码。
@@ -56,10 +60,37 @@ jobs:
           cd backend
           python tools_patch/reset_test_db.py
 
-      - name: Backend regression (25 脚本)
+      - name: Backend regression (26 脚本)
         run: |
           cd backend
-          python run_tests.py
+          python run_tests.py > ci_test.log 2>&1
+
+      - name: Report failure digest (on failure)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd backend
+          {
+            echo "# CI 后端回归失败摘要"
+            echo ""
+            echo "run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo ""
+            echo '```'
+            if [ -f ci_test.log ]; then
+              grep -nE "FAIL|ERR|崩溃|Traceback|AssertionError|Error" ci_test.log | head -50
+            else
+              echo "(ci_test.log 不存在 —— 失败发生在 reset/install 阶段)"
+            fi
+            echo '```'
+          } > ../digest.md
+          gh issue list --repo "${{ github.repository }}" --search "CI backend regression digest" --state all --json number --jq '.[0].number' > ../issue_num.txt
+          NUM=$(cat ../issue_num.txt)
+          if [ -z "$NUM" ]; then
+            gh issue create --repo "${{ github.repository }}" --title "CI backend regression digest" --body-file ../digest.md
+          else
+            gh issue comment "$NUM" --repo "${{ github.repository }}" --body-file ../digest.md
+          fi
 
       - name: Frontend type check (tsc --noEmit)
         run: |
