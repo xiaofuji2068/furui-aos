@@ -78,7 +78,11 @@ jobs:
             echo ""
             echo '```'
             if [ -f ci_test.log ]; then
-              grep -nE "FAIL|ERR|崩溃|Traceback|AssertionError|Error" ci_test.log | head -50
+              echo "===== 失败/崩溃行（含 extra 细节）====="
+              grep -nE "FAIL|ERR|崩溃|Traceback|AssertionError|Error|→ " ci_test.log | head -60
+              echo ""
+              echo "===== ci_test.log 末尾 90 行（含 traceback）====="
+              tail -n 90 ci_test.log
             else
               echo "(ci_test.log 不存在 —— 失败发生在 reset/install 阶段)"
             fi
