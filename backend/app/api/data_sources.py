@@ -18,7 +18,7 @@ from ..auth import require_perm
 from ..models import User
 from ..store_data_sources import (
     list_sources, get_source, list_catalog,
-    add_source, delete_source, toggle_source, overview_sources,
+    add_source, delete_source, toggle_source, overview_sources, pull_source,
 )
 
 router = APIRouter(prefix="/data-sources")
@@ -78,6 +78,15 @@ def remove(src_id: str, _auth: User = Depends(require_perm("datasource:config"))
 @router.post("/{src_id}/toggle")
 def toggle(src_id: str, _auth: User = Depends(require_perm("datasource:config"))):
     s = toggle_source(src_id)
+    if not s:
+        raise HTTPException(status_code=404, detail=f"data source '{src_id}' not found")
+    return s
+
+
+@router.post("/{src_id}/sync")
+def sync(src_id: str, _auth: User = Depends(require_perm("datasource:config"))):
+    """触发一次真实同步（仅 rest 类型真正拉数；其余类型返回 unsupported）。"""
+    s = pull_source(src_id)
     if not s:
         raise HTTPException(status_code=404, detail=f"data source '{src_id}' not found")
     return s

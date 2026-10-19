@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import Dict, List
 
 from sqlalchemy.orm import Session
@@ -770,7 +771,21 @@ def init_all(force_erp: bool = False) -> None:
         ensure_column(db_m, "audit_logs", "trace_id", "VARCHAR(64)")
     finally:
         db_m.close()
-    init_erp_db(force=force_erp)               # 模拟 ERP/CRM
+    init_erp_db(force=force_erp)               # 模拟 ERP/CRM（默认；无真实源时即最终数据）
+
+    # 路线图第 2 步（最小真实连接器）：若配置了真实 REST 数据源（环境变量
+    # FURUI_SYNC_ERP_SOURCE_ID 指定 id 且该源 type=rest 且非 disconnected），
+    # 启动时拉取真实数据覆盖 erp_crm.db。未配置则保持 mock，行为与旧版完全一致。
+    _real_erp = os.environ.get("FURUI_SYNC_ERP_SOURCE_ID")
+    if _real_erp:
+        try:
+            from .store_data_sources import get_source, pull_source
+            _src = get_source(_real_erp)
+            if _src and _src.get("type") == "rest" and _src.get("status") != "disconnected":
+                pull_source(_real_erp)
+        except Exception:
+            # 真实同步失败不阻断启动，mock 仍可用
+            pass
     db = SessionLocal()
     try:
         _fc = db.query(Company).order_by(Company.id).first()

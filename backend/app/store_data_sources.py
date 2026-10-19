@@ -13,6 +13,8 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional
 
+from .connector import sync_source
+
 # ---------- 初始数据源（内存） ----------
 
 _SOURCES: List[Dict[str, Any]] = [
@@ -141,6 +143,7 @@ _CATALOG: List[Dict[str, Any]] = [
     {"type": "file",  "name": "文件 / 对象存储", "icon": "📁", "tone": "emerald","category": "文件",       "desc": "CSV / Excel / 文档批量导入"},
     {"type": "kafka", "name": "Kafka 流",       "icon": "🌊", "tone": "rose",   "category": "消息流",     "desc": "事件流实时接入"},
     {"type": "sap",   "name": "SAP",            "icon": "🟦", "tone": "blue",   "category": "业务系统",   "desc": "ERP 巨头系统"},
+    {"type": "rest",  "name": "REST JSON",      "icon": "🔗", "tone": "cyan",   "category": "接口",       "desc": "对接外部系统 REST JSON（真实拉数，见 connector.py）"},
 ]
 
 _STATUS_STATE: Dict[str, str] = {
@@ -219,6 +222,30 @@ def toggle_source(src_id: str) -> Optional[Dict[str, Any]]:
                 s["last_sync"] = "—"
                 s["health"] = 0
                 s["latency_ms"] = 0
+            return dict(s)
+    return None
+
+
+def pull_source(src_id: str) -> Optional[Dict[str, Any]]:
+    """对一个数据源执行真实同步（仅 rest 类型）。成功/失败回写状态字段。
+
+    真实接入时，把这里对 sync_source 的调用替换为连通性探测 + 增量拉数调度。
+    """
+    for s in _SOURCES:
+        if s["id"] == src_id:
+            result = sync_source(src_id, s)
+            if result.get("ok"):
+                s["status"] = "connected"
+                s["state"] = _STATUS_STATE["connected"]
+                s["last_sync"] = "刚刚"
+                s["records"] = f'{result["records"]:,}'
+                s["health"] = result["health"]
+                s["latency_ms"] = result["latency_ms"]
+            else:
+                s["status"] = "error"
+                s["state"] = _STATUS_STATE["error"]
+                s["health"] = 0
+                s["latency_ms"] = result["latency_ms"]
             return dict(s)
     return None
 
