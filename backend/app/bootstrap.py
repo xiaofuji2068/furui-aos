@@ -773,15 +773,17 @@ def init_all(force_erp: bool = False) -> None:
         db_m.close()
     init_erp_db(force=force_erp)               # 模拟 ERP/CRM（默认；无真实源时即最终数据）
 
-    # 路线图第 2 步（最小真实连接器）：若配置了真实 REST 数据源（环境变量
-    # FURUI_SYNC_ERP_SOURCE_ID 指定 id 且该源 type=rest 且非 disconnected），
-    # 启动时拉取真实数据覆盖 erp_crm.db。未配置则保持 mock，行为与旧版完全一致。
+    # 路线图第 2/3 步（最小真实连接器 + file/CSV）：若配置了真实数据源
+    # （环境变量 FURUI_SYNC_ERP_SOURCE_ID 指定 id、type 属于已支持连接器、
+    #  且非 disconnected），启动时拉取真实数据覆盖 erp_crm.db。
+    # 未配置则保持 mock，行为与旧版完全一致。
     _real_erp = os.environ.get("FURUI_SYNC_ERP_SOURCE_ID")
     if _real_erp:
         try:
             from .store_data_sources import get_source, pull_source
+            from .connector import _CONNECTOR_TYPES
             _src = get_source(_real_erp)
-            if _src and _src.get("type") == "rest" and _src.get("status") != "disconnected":
+            if _src and _src.get("type") in _CONNECTOR_TYPES and _src.get("status") != "disconnected":
                 pull_source(_real_erp)
         except Exception:
             # 真实同步失败不阻断启动，mock 仍可用

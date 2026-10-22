@@ -9,8 +9,10 @@
 """
 from __future__ import annotations
 
+import csv
 import json
 import os
+import re
 import sqlite3
 import time
 from abc import ABC, abstractmethod
@@ -43,7 +45,7 @@ _ENTITY_TABLES: Dict[str, Dict[str, str]] = {
     },
 }
 
-_CONNECTOR_TYPES = {"rest"}
+_CONNECTOR_TYPES = {"rest", "file"}
 
 
 class DataConnector(ABC):
@@ -116,30 +118,96 @@ class RestJsonConnector(DataConnector):
                 for k, v in nested.items():
                     if k in _ENTITY_TABLES and isinstance(v, list):
                         raw.setdefault(k, v)
-        return self._map(raw)
+        return _normalize(raw, self.mapping)
 
-    def _map(self, raw: Dict[str, List[dict]]) -> Dict[str, List[dict]]:
-        out: Dict[str, List[dict]] = {}
-        for entity, rows in raw.items():
-            colmap = self.mapping.get(entity, {c: c for c in _ENTITY_TABLES[entity]})
-            norm = []
-            for r in rows:
-                row = {}
-                for json_field, column in colmap.items():
-                    if column in _ENTITY_TABLES[entity] and json_field in r:
-                        row[column] = r[json_field]
-                if row.get("id") is None:
-                    continue  # 主键缺失的行丢弃，避免污染
-                if row:
-                    norm.append(row)
-            if norm:
-                out[entity] = norm
-        return out
+
+def _coerce(value: Any) -> Any:
+    """CSV 全是字符串：按目标语义轻量转换。数字转 int/float，其余保持字符串。"""
+    if not isinstance(value, str):
+        return value
+    s = value.strip()
+    if s == "":
+        return None
+    s2 = s.replace(",", "")  # 容错千分位
+    if re.fullmatch(r"-?\d+", s2):
+        return int(s2)
+    try:
+        return float(s2)
+    except ValueError:
+        return s
+
+
+def _normalize(raw: Dict[str, List[dict]], mapping: Dict[str, Dict[str, str]]) -> Dict[str, List[dict]]:
+    """把 {entity: [原始行]} 按 mapping 归一化成表行（两种连接器共用）。
+
+    - mapping 缺省时列名等于 JSON/CSV 字段名；
+    - 仅允许写入 _ENTITY_TABLES 登记的列（防注入未知列）；
+    - 主键缺失的行丢弃，避免污染。
+    """
+    out: Dict[str, List[dict]] = {}
+    for entity, rows in raw.items():
+        if entity not in _ENTITY_TABLES:
+            continue
+        colmap = mapping.get(entity, {c: c for c in _ENTITY_TABLES[entity]})
+        norm = []
+        for r in rows:
+            row = {}
+            for json_field, column in colmap.items():
+                if column in _ENTITY_TABLES[entity] and json_field in r:
+                    row[column] = _coerce(r[json_field])
+            if row.get("id") is None:
+                continue  # 主键缺失的行丢弃，避免污染
+            if row:
+                norm.append(row)
+        if norm:
+            out[entity] = norm
+    return out
+
+
+class CsvFileConnector(DataConnector):
+    """文件 / CSV 连接器：读取 base_dir 下的实体 CSV，按 mapping 归一化。
+
+    设计落点同 REST：只负责「同步」时把真实数据物化进 erp_crm.db，
+    下游只读网关 / 脱敏 / 分析 / 建单全部原样复用。
+
+    config 结构：
+      base_dir:  str   必填，CSV 所在目录
+      files:     dict  实体名 -> 文件名（缺省 <entity>.csv，即 customers.csv 等）
+      mapping:   dict  同 REST（CSV 表头字段 -> 表列）；缺省列名=表头
+      encoding:  str   文件编码（默认 utf-8-sig，兼容带 BOM 的 Excel 导出）
+    """
+
+    name = "file"
+
+    def __init__(self, config: Dict[str, Any]):
+        self.cfg = config or {}
+        self.base_dir = (self.cfg.get("base_dir") or "").strip()
+        if not self.base_dir:
+            raise ValueError("CsvFileConnector 需要 config.base_dir")
+        self.files = self.cfg.get("files") or {}
+        self.mapping = self.cfg.get("mapping") or {}
+        self.encoding = self.cfg.get("encoding") or "utf-8-sig"
+
+    def pull(self) -> Dict[str, List[dict]]:
+        raw: Dict[str, List[dict]] = {}
+        for entity in _ENTITY_TABLES:
+            fname = self.files.get(entity) or f"{entity}.csv"
+            path = os.path.join(self.base_dir, fname)
+            if not os.path.exists(path):
+                continue
+            with open(path, newline="", encoding=self.encoding) as f:
+                reader = csv.DictReader(f)
+                rows = [dict(r) for r in reader]
+            if rows:
+                raw[entity] = rows
+        return _normalize(raw, self.mapping)
 
 
 def build_connector(source_type: str, config: Dict[str, Any]) -> DataConnector:
     if source_type == "rest":
         return RestJsonConnector(config)
+    if source_type == "file":
+        return CsvFileConnector(config)
     raise ValueError(f"不支持的连接器类型：{source_type}")
 
 
@@ -181,7 +249,8 @@ def sync_source(src_id: str, source: Dict[str, Any]) -> Dict[str, Any]:
     try:
         stype = source.get("type", "")
         if stype not in _CONNECTOR_TYPES:
-            return {"ok": False, "src_id": src_id, "status": source.get("status"),
+            return {"ok": False, "src_id": src_id, "status": "error", "records": 0,
+                    "latency_ms": 0, "health": 0,
                     "error": f"类型 {stype} 暂不支持真实同步（仅支持 {sorted(_CONNECTOR_TYPES)}）"}
         connector = build_connector(stype, source.get("config", {}))
         records = connector.pull()

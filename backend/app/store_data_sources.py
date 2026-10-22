@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional
 
-from .connector import sync_source
+from .connector import sync_source, _CONNECTOR_TYPES
 
 # ---------- 初始数据源（内存） ----------
 
