@@ -213,7 +213,7 @@
 
 | # | 债 | 影响 | 处置 |
 | --- | --- | --- | --- |
-| 1 | **真浏览器联调未做** | `/releases`、`/edge-sites` 两页只验到 SSR 200 + 代理数据正确，无真实点击 | 本机无 Playwright；装 Chromium ~500MB 需你点头 |
+| 1 | **真浏览器联调未做** | **已落地（2026-10-22）**：Playwright + 本机 Chrome 真跑登录 → 仪表盘系统健康（四维 + 看门狗 + 错误率 + 刷新）→ `/edge-sites` → `/releases`，11 断言全绿、无未捕获 JS 异常（`tests/e2e/browser_smoke.cjs`，截图留证 `tests/e2e/screenshots/`）。**并借此发现+修复真 bug**：`SystemHealth` 未解包 `wrap_response` 包裹响应，导致健康数据在真实浏览器中从不渲染（SSR 200 / API 单测均发现不了） | 已闭环；后续可纳入 CI（需 headless 浏览器环境） |
 | 2 | **迁移 downgrade 零实测** | 17 条迁移都有 `down_revision`，但没有一条真跑过 `downgrade` | 补一条 `verify_downgrade.py` 走干净库 |
 | 3 | `test_outbox_projector` 口径曾变 | CURRENT.md 记其 FAIL「<5s 验收」，本轮 **21 PASS/0 FAIL** | 随 `reset_test_db.py` 改走迁移链后隔离库数据变干净，断言前提复位；**回归口径以本轮为准** |
 | 4 | 签名是非对称实现的占位 | 当前 `sha256(version\|manifest\|sbom)`，多人可伪造 | 换私钥签名前不接受"外部审计"承诺 |

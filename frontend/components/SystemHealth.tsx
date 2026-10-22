@@ -28,7 +28,8 @@ export default function SystemHealth() {
   const load = useCallback(() => {
     fetch("/api/backend/health")
       .then((r) => r.json())
-      .then((d) => setData(d))
+      // 后端经中间件 wrap_response 包裹为 { code, message, data }，健康体在 data 内
+      .then((d) => setData(d.data ?? d))
       .catch(() => setData(null));
   }, []);
 
