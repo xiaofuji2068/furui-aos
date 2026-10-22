@@ -79,3 +79,6 @@ backend/test_nuclear_*.py
 .next*/
 .build_verify/
 .vercel/
+
+# ---- WorkBuddy 本地记忆（内部工作日志，含项目策略/任务编号，公开仓库不应入库）----
+.workbuddy/memory/
