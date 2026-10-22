@@ -131,7 +131,7 @@
 
 | 模块 | 图谱要求 | 实测证据 | 等级 | 变化 |
 | --- | --- | --- | --- | --- |
-| 90-01 证据可观测与韧性 | Health/Log/Trace/Receipt/Lineage/Watchdog | `GET /api/health` 1 端点 + `audit_logs` + `tool_executions` + `action_receipts` + `eval_contracts`；**无 Trace 链路、无 Watchdog 守护** | 🟡 L2 | 🟡 |
+| 90-01 证据可观测与韧性 | Health/Log/Trace/Receipt/Lineage/Watchdog | `GET /api/health`（DB/LLM/向量/边缘/错误率）+ `audit_logs` + `tool_executions` + `action_receipts` + `eval_contracts`；Trace 链路 ID 落两表（`test_trace` 锁定）；Watchdog 升体检 + 告警落 `audit_logs`（`test_watchdog_alert` 锁定） | 🟡 L2 | 🟡→🟡（Trace/Watchdog 已补，仍差跨租户 PG 扫描与真浏览器联调） |
 | 90-02 如何知道系统真的工作 | 成熟度矩阵、差异地图 | **本文** + 可复跑采集器 `tools_patch/maturity_snapshot.py` + 证据快照 `docs/maturity-snapshot.json` | 🟡 L2 | 🔴→L2（本任务产出） |
 
 ---
@@ -184,11 +184,11 @@
           └──────────────────────────────────────────────┘
 前端可操作 ┌──────────────────────────────────────────────┐ 20 路由 / tsc 0 错 / 真浏览器未验
           └──────────────────────────────────────────────┘
-生产化     ┌──────────────────────────────────────────────┐ CI / Trace / Watchdog / 真实连接器 全空
+生产化     ┌──────────────────────────────────────────────┐ CI ✅ / Trace ✅ / Watchdog ✅(告警落审计) / 真实连接器 ✅(REST+CSV)
           └──────────────────────────────────────────────┘
 ```
 
-**五轴里前四轴都亮着，第五轴（生产化）是空的** —— 这就是当前阶段最真实的画像。
+**五轴里前四轴都亮着，第五轴（生产化）此前全空，现 TASK-018-2 已将 Trace + Watchdog 立起、真实连接器（REST+CSV）与 CI 也已落地；剩余缺口是真浏览器联调 + 生产 PG 跨租户 Watchdog 扫描** —— 这就是当前阶段最真实的画像。
 
 ---
 
@@ -200,10 +200,10 @@
 | --- | --- | --- |
 | Health | ✅ 有 | `GET /api/health`（DB/LLM/向量），无前端消费 |
 | Log | ✅ 有 | `audit_logs` 表 + `/api/admin/audit` + admin 日志页 |
-| **Trace** | ❌ 无 | 端点间无链路 ID 传递，`tool_executions` 无 trace_id |
+| **Trace** | ✅ 有 | 请求中间件生成 `trace_id` 透传进 `audit_logs` + `tool_executions`（`test_trace` 锁定一次请求两表同 ID），`/api/health` 回写 `X-Trace-Id` |
 | Receipt | ✅ 有 | `action_receipts` + `/api/admin/receipts` |
 | Lineage | 🟠 部分 | 审批谱系有（`eval_contracts`），**数据血缘无** |
-| Watchdog | ❌ 无 | 无守护进程/无失败自愈，进程挂了没人知道 |
+| Watchdog | 🟡 有（应用级） | `/api/health` 升体检：DB 失联 / 近 5 分钟错误率超 50% / 边缘站点心跳超 300s 判 offline 三类异常**落 `audit_logs`（`action=watchdog.alert`，带 5 分钟冷却防刷屏，`test_watchdog_alert` 锁定）；基础设施级自愈靠 compose `restart: unless-stopped` + backend healthcheck。剩余缺口：进程挂掉靠容器重启而非进程内看门狗、生产 PG 跨租户扫描需 BYPASSRLS 或逐租户 sweep |
 
 ---
 
@@ -217,7 +217,7 @@
 | 2 | **迁移 downgrade 零实测** | 17 条迁移都有 `down_revision`，但没有一条真跑过 `downgrade` | 补一条 `verify_downgrade.py` 走干净库 |
 | 3 | `test_outbox_projector` 口径曾变 | CURRENT.md 记其 FAIL「<5s 验收」，本轮 **21 PASS/0 FAIL** | 随 `reset_test_db.py` 改走迁移链后隔离库数据变干净，断言前提复位；**回归口径以本轮为准** |
 | 4 | 签名是非对称实现的占位 | 当前 `sha256(version\|manifest\|sbom)`，多人可伪造 | 换私钥签名前不接受"外部审计"承诺 |
-| 5 | 心跳无超时判离线 | 边缘站点只记录 `last_heartbeat_at`，**不因超时转 offline** | 页面显示的 online 是当下事实，不是健康推断 |
+| 5 | 心跳无超时判离线 | **已落地（TASK-018-2）**：`_edge_watchdog` 心跳超 300s 自动转 `offline`（dev SQLite 真实生效；PG 受 RLS 过滤优雅降级为 0 行，不报错） | 剩余：生产 PG 跨租户 Watchdog 扫描需 BYPASSRLS 服务角色或按 company 逐租户 sweep |
 | 6 | `DASHSCOPE_API_KEY` 未填 | 语义检索走本地哈希兜底，检索质量降级 | 填了即升 text-embedding-v3（维度一致不需重建索引） |
 | 7 | 无 CI | 一次全绿回归要人工跑 ~7 分钟 | 见 §6 第 1 条 |
 
@@ -229,7 +229,7 @@
 | -: | --- | --- | --- | --- |
 | 1 | 70-01 | **接一条 CI**（GitHub Actions：reset_test_db → run_tests → tsc） | push 后自动跑出「25 脚本 / PASS 660 / tsc 0 错」三连绿 | 远端已配（见 README 版本管理节） |
 | 2 | 90-01 | **Trace 链路 ID**：请求中间件生成 `trace_id`，透传进 `audit_logs` + `tool_executions` | 一次请求后两表都能查到同一 trace_id；`test_trace.py` 锁定 | 1 |
-| 3 | 90-01 | **Watchdog**：`/api/health` 升为体检（依赖探测 + 近 5 分钟错误率 + 边缘站点超时判离线） | 边缘站点心跳超 5 分钟自动转 `offline`；前端 dashboard 显四项 | 2 |
+| 3 | 90-01 | **Watchdog**：`/api/health` 升为体检（依赖探测 + 近 5 分钟错误率 + 边缘站点超时判离线）+ 告警落 `audit_logs` | 边缘心跳超 300s 转 `offline`；三类异常（DB 失联/错误率超 50%/边缘批量掉线）落 `audit_logs` 带冷却；前端 dashboard 显四项 | 2 → ✅（TASK-018-2 + 告警落审计） |
 | 4 | 80-03 | **downgrade 实测**：干净库上逐条 `downgrade -1` 再 `upgrade head` | 17 步全通；失败即修迁移 | 无 |
 | 5 | 10-01/10-05 | **最小血缘**：`data_datasets` 加 `source_id` 自引用，记录一次抽取血缘 | 数据源页可见"上游→本次"一行 | 无 |
 | 6 | 30-02 | **Model Route**：`POST /api/admin/models/route` 落默认模型 | admin 页可切换默认模型，测试锁定 | 无 |

@@ -18,7 +18,19 @@ from sqlalchemy import text
 from ..config import settings
 from ..db import IS_SQLITE, SessionLocal
 from ..models_release import EdgeSite
-from ..models_ai import ToolExecution
+from ..models_ai import ToolExecution, write_audit
+
+
+# ---------- 看门狗告警阈值与冷却（TASK-018-2 生产化：异常要可审计，不刷屏） ----------
+# 近 5 分钟工具调用错误率告警阈值（超 50% 视为系统级异常）
+WATCHDOG_ERROR_RATE_THRESHOLD = 0.5
+# 单次健康检查翻转 offline 的边缘站点数告警阈值（>=1 即记一笔）
+WATCHDOG_EDGE_OFFLINE_THRESHOLD = 1
+# 同类型告警冷却窗口（秒）：窗口内不重复落库，避免健康检查高频触发刷屏
+WATCHDOG_ALERT_COOLDOWN_S = 300
+
+# 进程级冷却表：alert_key -> 上次落库时间戳（重启自动重置，重新告警）
+_ALERT_COOLDOWN: Dict[str, float] = {}
 
 
 router = APIRouter(tags=["健康检查"])
@@ -148,6 +160,93 @@ def _error_rate_5m(window_seconds: int = 300) -> Dict[str, Any]:
         return {"ok": False, "detail": f"{e.__class__.__name__}: {e}"}
 
 
+def _watchdog_alerts(checks: List[Dict[str, Any]], edge: Dict[str, Any], err: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """纯决策函数：根据各项探测结果返回需要告警的条目（不写库、不抛错）。
+
+    返回列表每项形如 {"key": str, "target": str, "detail": dict}，供 _emit_alert 落库。
+    三类告警：
+      - db_down            数据库失联（checks 中「数据库」status==error）
+      - error_rate_high    近 5 分钟工具错误率超阈值
+      - edge_offline       边缘站点批量掉线（stale_flipped_to_offline >= 阈值）
+    """
+    alerts: List[Dict[str, Any]] = []
+
+    db_check = next((c for c in checks if c.get("name") == "数据库"), None)
+    if db_check and db_check.get("status") == "error":
+        alerts.append({
+            "key": "db_down",
+            "target": "database",
+            "detail": {"status": "error", "detail": db_check.get("detail", "")},
+        })
+
+    if err.get("ok") and err.get("rate", 0.0) >= WATCHDOG_ERROR_RATE_THRESHOLD:
+        alerts.append({
+            "key": "error_rate_high",
+            "target": "tool_execution",
+            "detail": {
+                "window_seconds": err.get("window_seconds"),
+                "total": err.get("total"),
+                "errors": err.get("errors"),
+                "rate": err.get("rate"),
+            },
+        })
+
+    if edge.get("ok") and edge.get("stale_flipped_to_offline", 0) >= WATCHDOG_EDGE_OFFLINE_THRESHOLD:
+        alerts.append({
+            "key": "edge_offline",
+            "target": "edge_sites",
+            "detail": {
+                "threshold_seconds": edge.get("threshold_seconds"),
+                "counts": edge.get("counts"),
+                "stale_flipped_to_offline": edge.get("stale_flipped_to_offline"),
+            },
+        })
+
+    return alerts
+
+
+def _emit_alert(alert: Dict[str, Any]) -> None:
+    """把单条看门狗告警落 audit_logs（带冷却），任何失败静默。
+
+    用裸 SessionLocal（无租户上下文）写审计；company_id 留空（系统级告警），
+    与 _edge_watchdog / _error_rate_5m 同一套读取口径。PG 上若被 RLS 拦截也只静默，
+    绝不连累 /api/health 本身返回。
+    """
+    key = alert["key"]
+    now = time.time()
+    last = _ALERT_COOLDOWN.get(key)
+    if last is not None and (now - last) < WATCHDOG_ALERT_COOLDOWN_S:
+        return  # 冷却中，跳过落库（防刷屏）
+
+    _ALERT_COOLDOWN[key] = now  # 无论成败都记一次，避免写库持续失败导致死循环刷屏
+    try:
+        db = SessionLocal()
+        try:
+            write_audit(
+                db,
+                action="watchdog.alert",
+                actor_type="system",
+                actor_name="health-watchdog",
+                target=alert["target"],
+                detail={"alert": key, **alert["detail"]},
+                result="warning",
+            )
+            db.commit()
+        finally:
+            db.close()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _emit_watchdog_alerts(checks: List[Dict[str, Any]], edge: Dict[str, Any], err: Dict[str, Any]) -> None:
+    """在 health() 末尾调用：根据探测结果落告警，整体静默不阻断健康检查。"""
+    try:
+        for a in _watchdog_alerts(checks, edge, err):
+            _emit_alert(a)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 @router.get("/health")
 def health() -> Dict[str, Any]:
     checks: List[Dict[str, Any]] = [
@@ -159,6 +258,8 @@ def health() -> Dict[str, Any]:
     failed = [c for c in checks if c["status"] == "error"]
     edge = _edge_watchdog()
     err = _error_rate_5m()
+    # 生产化：把 DB 失联 / 错误率超阈值 / 边缘批量掉线 等异常落 audit_logs（静默，不阻断返回）
+    _emit_watchdog_alerts(checks, edge, err)
     return {
         "status": "ok" if not failed else "degraded",
         "checks": checks,
