@@ -70,6 +70,9 @@ class RestJsonConnector(DataConnector):
       mapping:     dict  每个实体的字段映射 {entity: {json_field: column}}
                           缺省时直接用列名当 JSON 字段名
       timeout_sec: int   默认 10
+      retries:     int   网络错误 / 超时 / 5xx 的重试次数（默认 2）
+      backoff_sec: float 指数退避基数（默认 0.5，第 n 次等待 0.5*2^n 秒）
+                          注：4xx（含 401/403 鉴权错）属请求/鉴权问题，不重试，立即上报
     """
 
     name = "rest"
@@ -83,6 +86,8 @@ class RestJsonConnector(DataConnector):
         self.headers = dict(self.cfg.get("headers") or {})
         self.mapping = self.cfg.get("mapping") or {}
         self.timeout = int(self.cfg.get("timeout_sec") or 10)
+        self.retries = int(self.cfg.get("retries") or 2)
+        self.backoff = float(self.cfg.get("backoff_sec") or 0.5)
         self._apply_auth()
 
     def _apply_auth(self) -> None:
@@ -97,13 +102,37 @@ class RestJsonConnector(DataConnector):
                     self.headers[auth.get("header", "X-API-Key")] = token
 
     def pull(self) -> Dict[str, List[dict]]:
-        with httpx.Client(timeout=self.timeout) as client:
-            if self.method == "POST":
-                resp = client.post(self.endpoint, headers=self.headers or None)
-            else:
-                resp = client.get(self.endpoint, headers=self.headers or None)
-            resp.raise_for_status()
-            payload = resp.json()
+        """拉取并归一化真实数据。
+
+        重试策略（应对外网 ERP 抖动）：
+          - 网络错误 / 超时 / 5xx：指数退避重试（retries 次，backoff_sec 翻倍）；
+          - 4xx（含 401/403 鉴权错）：不重试，立即上报 —— 重试无意义且会刷屏。
+        """
+        payload: Any = None
+        for attempt in range(1 + self.retries):
+            try:
+                with httpx.Client(timeout=self.timeout) as client:
+                    if self.method == "POST":
+                        resp = client.post(self.endpoint, headers=self.headers or None)
+                    else:
+                        resp = client.get(self.endpoint, headers=self.headers or None)
+                if resp.status_code >= 500:
+                    # 服务端瞬时错误，值得重试
+                    if attempt < self.retries:
+                        time.sleep(self.backoff * (2 ** attempt))
+                        continue
+                    raise RuntimeError(f"ERP 持续返回 5xx：{resp.status_code}")
+                resp.raise_for_status()  # 4xx（鉴权 / 请求错）不重试，直接抛
+                payload = resp.json()
+                break
+            except (httpx.TransportError, httpx.TimeoutException) as e:
+                # 网络抖动 / 连接超时：退避后重试
+                if attempt < self.retries:
+                    time.sleep(self.backoff * (2 ** attempt))
+                    continue
+                raise
+        if payload is None:
+            raise RuntimeError("ERP 拉取未返回任何数据（重试耗尽）")
 
         raw: Dict[str, List[dict]] = {}
         # 归一化：支持 {entity: [...]}、顶层数组（默认当 orders）、或 {"data": {entity: [...]}}
