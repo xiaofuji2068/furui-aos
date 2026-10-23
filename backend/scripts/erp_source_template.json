@@ -1,0 +1,17 @@
+{
+  "_说明": "标准 ERP（通用 REST）对接模板。把 endpoint 换成你的真实 ERP 地址；auth 改为你的鉴权方式（密钥建议走 env，不要写死在文件里）；mapping 按真实字段名调整。字段名已按「用友 U8 开放接口」风格示例（金蝶 K3/云星空风格多为 FNumber/FName/FBillNo/FQty/FAmount，可类比替换）。填好后运行：python scripts/sync_real_erp.py --config scripts/erp_source_template.json",
+  "_重要约束": "products 表的 code 列是 NOT NULL，必须映射一个编码字段（如用友 cInvCode）；主键 id 用自增/唯一键（如 iAutoID）。即一张表要同时给出 id 与 code 两个字段，否则同步会因 NOT NULL 失败。customers/sales_reps/orders 的 NOT NULL 列（name/level/region/order_no/customer_id/product_id/rep_id/order_date 等）也必须在 mapping 中覆盖。",
+  "_ERP返回结构提示": "本模板假设 ERP 一次返回分实体结构 {customers:[],products:[],sales_reps:[],orders:[]}。若 ERP 是「每个实体一个接口」或「顶层数组」，请改用 scripts/demo_real_erp.py 说明里的形态，或在 ERP 侧加一层聚合网关。",
+  "endpoint": "https://erp.your-company.com/api/open/sales/sync",
+  "method": "GET",
+  "auth": { "type": "bearer", "env": "ERP_API_KEY" },
+  "timeout_sec": 30,
+  "retries": 2,
+  "backoff_sec": 0.5,
+  "mapping": {
+    "customers":  { "cCusCode": "id", "cCusName": "name", "cCusGrade": "level", "cProvince": "region", "cTrade": "industry", "cConPerson": "contact_name", "cConPhone": "contact_phone", "cPersonCode": "owner_rep_id", "dCusReg": "created_at" },
+    "products":   { "iAutoID": "id", "cInvCode": "code", "cInvName": "name", "cGroupName": "category", "iUnitPrice": "unit_price", "iCost": "cost" },
+    "sales_reps": { "cPersonCode": "id", "cPersonName": "name", "cDeptName": "region", "dHireDate": "hire_date" },
+    "orders":     { "iSOID": "id", "cOrderNo": "order_no", "cCusCode": "customer_id", "cInvCode": "product_id", "cPersonCode": "rep_id", "cWhName": "region", "iQty": "qty", "fAmount": "amount", "cState": "status", "dDate": "order_date" }
+  }
+}

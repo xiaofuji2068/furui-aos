@@ -145,3 +145,53 @@ cd backend
 ```
 
 三条全绿，即代表「接真实 ERP 这条路」在代码层已闭环，只差 §1 的真实端点与凭证。
+
+---
+
+## 7. 标准 ERP 模板 + 本地 Demo（没有真实端点也能跑通接线）
+
+不想等真实凭证？仓库内置一套**标准 ERP（通用 REST）对接样板**，让你先把「模板映射 → 物化 → 网关 → 脱敏 → 归因」全链路跑通、确认映射写对，再把端点换成真实的。
+
+### 7.1 模板配置（填好即用）
+
+`backend/scripts/erp_source_template.json` —— 已按**用友 U8 开放接口**风格写好字段名示例（`cCusCode`/`cInvCode`/`iSOID`/`fAmount` 等），金蝶 K3/云星空风格（`FNumber`/`FBillNo`/`FQty`/`FAmount`）可类比替换。要点：
+
+- `auth` 用 `{"type":"bearer","env":"ERP_API_KEY"}`，密钥走环境变量，不写死；
+- `mapping` 用 ERP 异名字段 → 表列，**必须覆盖每张表的 NOT NULL 列**：
+  - `products.code` 是 NOT NULL → 需映射一个编码字段（如 `cInvCode`）；
+  - 每张表都要给出主键 `id`（如 `iAutoID` / `iSOID` / `cCusCode`），否则整行被丢弃；
+  - `orders` 的 `order_no` / `customer_id` / `product_id` / `rep_id` / `region` / `order_date` 均为 NOT NULL，务必覆盖。
+
+### 7.2 本地 Demo（无需真实端点）
+
+`backend/scripts/demo_real_erp.py` 会：
+
+1. 起一个本地 mock「标准 ERP」REST 服务，返回**用友风格异名字段** JSON；
+2. 读取上面那份模板的 `mapping`；
+3. 走生产接线 `connector.sync_source`（与 API `/sync`、bootstrap 门控同一函数）；
+4. 经**只读网关**验证：真实数据可见 + PII 脱敏 + 归因定位头号下滑客户（闭环可触发建单）。
+
+> 全程使用**临时库**（monkeypatch `ERP_DB_PATH`），**绝不触碰 `backend/data/erp_crm.db`**。
+
+```bash
+cd backend
+./venv/Scripts/python.exe scripts/demo_real_erp.py
+```
+
+预期输出：同步 records=70（客户3/商品2/业务员1/订单64）、脱敏电话 `137****1111`、归因定位「远图智能 7月960万→8月192万 降幅768万」。
+
+### 7.3 用模板一键对接真实 ERP
+
+确认模板映射无误后，替换 `endpoint` / `auth`，然后：
+
+```bash
+cd backend
+# 演练（DRY-RUN，只拉取打印记录数，不落库）
+./venv/Scripts/python.exe scripts/sync_real_erp.py --config scripts/erp_source_template.json
+
+# 真实落库（确认无误后追加 --yes）
+./venv/Scripts/python.exe scripts/sync_real_erp.py --config scripts/erp_source_template.json --yes
+```
+
+`--config` 与纯 env 用法可混用：env（`ERP_ENDPOINT` / `ERP_API_KEY` / `ERP_MAPPING_JSON` 等）会覆盖模板里的对应项。
+
